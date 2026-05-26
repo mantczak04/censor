@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Messenger Style Redactor</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <h1>Messenger Style Redactor</h1>
+
+  <label for="threadId">Thread ID</label>
+  <input type="text" id="threadId" placeholder="ID from /t/… in group URL" />
+
+  <label for="model">Ollama model</label>
+  <input type="text" id="model" />
+
+  <label for="ollamaUrl">Ollama URL</label>
+  <input type="text" id="ollamaUrl" />
+
+  <label for="timeoutMs">Timeout (ms)</label>
+  <input type="number" id="timeoutMs" min="5000" step="1000" />
+
+  <label for="masterPrompt">Master prompt (system)</label>
+  <textarea id="masterPrompt" rows="6"></textarea>
+
+  <div class="actions">
+    <button type="button" id="save">Save</button>
+    <button type="button" id="testOllama">Test Ollama</button>
+  </div>
+
+  <p id="status" class="status" hidden></p>
+  <pre id="testResult" class="test-result" hidden></pre>
+
+  <section id="errorSection" class="error-section" hidden>
+    <h2>Last error</h2>
+    <pre id="lastError"></pre>
+    <button type="button" id="clearError">Clear error</button>
+  </section>
+
+  <script src="ollama.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
