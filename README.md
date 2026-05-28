@@ -1,6 +1,8 @@
 # censor - message style redactor
 
-browser extension (chrome/firefox) that redacts the message in given style using local LLM model. 
+browser extension (chrome/firefox) that redacts the message in given style using local LLM model.
+
+>>>ONLY messenger.com SUPPORTED<<<
 
 ## Install the extension
 

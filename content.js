@@ -9,6 +9,8 @@ const SEND_SELECTORS = [
   '[aria-label*="end"]',
   '[aria-label*="Send"]',
 ];
+const GENERATION_INDICATOR_ID = "messenger-redactor-generation-indicator";
+const GENERATION_INDICATOR_STYLE_ID = "messenger-redactor-generation-indicator-style";
 
 let config = null;
 let isProcessing = false;
@@ -18,6 +20,7 @@ let sendButtonEl = null;
 let composerKeydownHandler = null;
 let sendClickHandler = null;
 let allowNextSendClick = false;
+let generationIndicatorEl = null;
 
 function getFromStorage(keys) {
   return new Promise((resolve, reject) => {
@@ -136,6 +139,77 @@ function setBadge(text, color) {
   sendRuntimeMessage({ type: "badge", text, color });
 }
 
+function ensureGenerationIndicatorStyles() {
+  if (document.getElementById(GENERATION_INDICATOR_STYLE_ID)) return;
+
+  const style = document.createElement("style");
+  style.id = GENERATION_INDICATOR_STYLE_ID;
+  style.textContent = `
+    #${GENERATION_INDICATOR_ID} {
+      position: fixed;
+      left: 50%;
+      bottom: 88px;
+      transform: translateX(-50%);
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border: 3px solid #111;
+      border-radius: 999px;
+      background: #ffd400;
+      color: #111;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      font: 700 15px system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: 0.01em;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    #${GENERATION_INDICATOR_ID}::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border: 3px solid #111;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: messenger-redactor-spin 0.8s linear infinite;
+    }
+
+    @keyframes messenger-redactor-spin {
+      to { transform: rotate(360deg); }
+    }
+  `;
+  document.head.append(style);
+}
+
+function ensureGenerationIndicator() {
+  if (generationIndicatorEl?.isConnected) return generationIndicatorEl;
+
+  ensureGenerationIndicatorStyles();
+  const indicator = document.createElement("div");
+  indicator.id = GENERATION_INDICATOR_ID;
+  indicator.setAttribute("role", "status");
+  indicator.setAttribute("aria-live", "assertive");
+
+  const label = document.createElement("span");
+  label.textContent = "Generating your rewritten message";
+
+  indicator.append(label);
+  document.body.append(indicator);
+  generationIndicatorEl = indicator;
+  return indicator;
+}
+
+function showGenerationIndicator() {
+  ensureGenerationIndicator();
+}
+
+function hideGenerationIndicator() {
+  generationIndicatorEl?.remove();
+  generationIndicatorEl = null;
+}
+
 async function setError(message) {
   await setInStorage({ lastError: message });
   setBadge("!", "#cc0000");
@@ -195,6 +269,7 @@ async function handleIntercept(source) {
 
   isProcessing = true;
   setBadge("...", "#888888");
+  showGenerationIndicator();
   console.log(`[messenger-redactor] intercepted (${source}), calling Ollama`);
 
   try {
@@ -222,6 +297,7 @@ async function handleIntercept(source) {
     await setError(msg);
   } finally {
     isProcessing = false;
+    hideGenerationIndicator();
   }
 }
 
